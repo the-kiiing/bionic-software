@@ -10,25 +10,19 @@ function App() {
     const highlightedParagraphs = [];
 
     for (const paragraph of paragraphs) {
-      const words = paragraph.split(" "); // Split each paragraph into words
-      const highlightedWords = [];
+      const wordsAndSymbols = paragraph.split(
+        /(\s+|[,~!@#$%^&*()_+{}:"|<>?\-=\[\];',./]+)/
+      ); // Split by spaces and specified symbols
+      const highlightedWordsAndSymbols = [];
 
-      for (const word of words) {
-        let highlightedWord = "";
+      for (const item of wordsAndSymbols) {
+        let highlightedItem = "";
 
-        // Check if the word is an email address
-        if (isValidEmail(word)) {
-          const emailParts = splitEmail(word);
-          const emailFirst30Percent = emailParts[0].slice(
-            0,
-            Math.ceil(emailParts[0].length * 0.3)
-          );
-          const emailRemaining70Percent = emailParts[0].slice(
-            emailFirst30Percent.length
-          );
-          highlightedWord = `<strong>${emailFirst30Percent}</strong>${emailRemaining70Percent}${emailParts[1]}`;
+        if (item.match(/\s+/)) {
+          // If it's a space (whitespace), keep it as is
+          highlightedItem = item;
         } else {
-          const wordWithoutSymbols = word.replace(/[^a-zA-Z0-9\-@.]/g, ""); // Remove symbols except dashes, @, and .
+          const wordWithoutSymbols = item.replace(/[^a-zA-Z0-9@.]/g, ""); // Remove symbols except @ and .
           const wordLength = wordWithoutSymbols.length;
 
           if (wordLength > 0) {
@@ -40,19 +34,22 @@ function App() {
               firstThirtyPercent.length
             );
 
-            // Replace the word with the first 30% in bold, and add back any removed symbols
-            highlightedWord = word.replace(
+            // Replace the item with the first 30% in bold, and add back any removed symbols
+            highlightedItem = item.replace(
               wordWithoutSymbols,
               `<strong>${firstThirtyPercent}</strong>${remainingSeventyPercent}`
             );
+          } else {
+            // If the item is only symbols (no alphanumeric characters), keep it as is
+            highlightedItem = item;
           }
         }
 
-        highlightedWords.push(highlightedWord);
+        highlightedWordsAndSymbols.push(highlightedItem);
       }
 
-      // Join the highlighted words back into a single paragraph
-      const highlightedParagraph = highlightedWords.join(" ");
+      // Join the highlighted words and symbols back into a single paragraph
+      const highlightedParagraph = highlightedWordsAndSymbols.join("");
       highlightedParagraphs.push(highlightedParagraph);
     }
 
@@ -60,22 +57,6 @@ function App() {
     const highlightedText = highlightedParagraphs.join("<br>");
 
     return highlightedText;
-  }
-
-  // Function to check if a word is an email address
-  function isValidEmail(word) {
-    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-    return emailPattern.test(word);
-  }
-
-  // Function to split an email address into two parts: before and after the "@" symbol
-  function splitEmail(email) {
-    const atIndex = email.indexOf("@");
-    if (atIndex === -1) {
-      return [email, ""];
-    } else {
-      return [email.slice(0, atIndex + 1), email.slice(atIndex + 1)];
-    }
   }
 
   const handleInputChange = (e) => {
